@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # (c) 2016, Dan Vaida <vaida.dan@gmail.com>
@@ -14,110 +14,127 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 
+# use 
+# ./check_gl.py --endpoint http://10.0.16.12:9000 --user xxx --pass xxx --filter uncommitted_journal_entries --critical 100000 --warning 10000
+# to check for uncommitted entrys
+
 import sys
 import getopt
-import urllib2
-import base64
-import json
+import urllib3 
 import jsonpath
 
 def usage():
-    print "\nUnsupported, missing or malformed parameter(s)! \n"
-    print "Parameters: \n"
-    print '-V, --version                                      |   (optional, displays script version) \n'
-    print '-h, --help                                         |   (optional, displays this information) \n'
-    print '-u, --user <username>                              |   (mandatory) \n'
-    print '-p, --password <password>                          |   (mandatory) \n'
-    print '-e, --endpoint <protocol>://<host>:<port>/<path>   |   (mandatory) \n'
-    print '-f, --filter <object>                              |   (mandatory) \n'
-    print '-c, --critical <integer>                           |   (mandatory) \n'
-    print '-w, --warning <integer>                            |   (mandatory) \n'
-    print 'Example: \n'
-    print './check_gl --endpoint http://localhost:12900/system/metrics/org.graylog2.buffers.process.usage --user ansible --pass 1234 --filter buffers.input.utilization -c 50 -w 100'
+    print ("\nUnsupported, missing or malformed parameter(s)! \n")
+    print ("Parameters: \n")
+    print ('-V, --version                                      |   (optional, displays script version) \n')
+    print ('-h, --help                                         |   (optional, displays this information) \n')
+    print ('-u, --user <username>                              |   (mandatory) \n')
+    print ('-p, --password <password>                          |   (mandatory) \n')
+    print ('-e, --endpoint <protocol>://<host>:<port>/<path>   |   (mandatory) \n')
+    print ('-f, --filter <object>                              |   (mandatory) \n')
+    print ('-c, --critical <integer>                           |   (mandatory) \n')
+    print ('-w, --warning <integer>                            |   (mandatory) \n')
+    print ('Example: \n')
+    print ('./check_gl --endpoint http://localhost:12900/system/metrics/org.graylog2.buffers.process.usage --user ansible --pass 1234 --filter buffers.input.utilization -c 50 -w 100')
 
 def main(argv):
-  _header = {'Content-Type', 'application/json'}
-  _method = "GET"
-  _endpoint = 'http://localhost:12900'
-  _user = ''
-  _password = ''
-  _filter = ''
-  _version = '0.1'
-  _critical = '0'
-  _warning = '0'
-  found_h = False
-  found_V = False
-  found_u = False
-  found_p = False
-  found_e = False
-  found_f = False
-  found_c = False
-  found_w = False
+    _header = {'Content-Type', 'application/json'}
+    _method = "GET"
+    _endpoint = 'http://localhost:12900'
+    _user = ''
+    _password = ''
+    _filter = ''
+    _version = '0.1'
+    _critical = '0'
+    _warning = '0'
+    found_h = False
+    found_V = False
+    found_u = False
+    found_p = False
+    found_e = False
+    found_f = False
+    found_c = False
+    found_w = False
 
-  try:
-      opts, args = getopt.getopt(argv, "Vhu:p:e:f:c:w:", ["version", "help", "user=", "password=", "endpoint=", "filter=", "critical=", "warning="])
-  except getopt.GetoptError:
-      usage()
-      sys.exit(3)
-
-  for opt, arg in opts:
-      if opt in ("-V", "--version"):
-          print _version
-          found_V = True
-          sys.exit(0)
-      elif opt in ("-h", "--help"):
-          found_h = True
-          usage()
-          sys.exit(0)
-      elif opt in ("-u", "--user"):
-          _user = arg
-          found_u = True
-      elif opt in ("-p", "--password"):
-          _password = arg
-          found_p = True
-      elif opt in ("-e", "--endpoint"):
-          _endpoint = arg
-          found_e = True
-      elif opt in ("-f", "--filter"):
-          _filter = arg
-          found_f = True
-      elif opt in ("-c", "--critical"):
-          _critical = int(arg)
-          found_c = True
-      elif opt in ("-w", "--warning"):
-          _warning = int(arg)
-          found_w = True
-
-  if not found_u or not found_p or not found_e or not found_f or not found_c or not found_w:
-    usage()
-    sys.exit(3)
-
-  req = urllib2.Request(_endpoint)
-  req.add_header(*_header)
-  base64string = base64.encodestring('%s:%s' % (_user, _password)).replace('\n', '')
-  req.add_header("Authorization", "Basic %s" % base64string)   
-
-  try: 
-    response = urllib2.urlopen(req).read()
-    response = json.loads(response.decode('utf-8'))
-    value = int(str(jsonpath.jsonpath(response, _filter))[1:-1])
-
-    if (_warning >= _critical):
-        print 'Critical threshold must not be lower or equal to the warning threshold!'
+    try:
+        opts, args = getopt.getopt(argv, "Vhu:p:e:f:c:w:", ["version", "help", "user=", "password=", "endpoint=", "filter=", "critical=", "warning="])
+    except getopt.GetoptError:
+        usage()
         sys.exit(3)
-    elif (value >= _critical):
-        print "GRAYLOG CRITICAL - value: %s | " % (value)
-        sys.exit(2)
-    elif (value >= _warning):
-        print "GRAYLOG WARNING - value: %s | " % (value)
-        sys.exit(1)
-    else:
-        print "GRAYLOG OK - value: %s | " % (value)
-        sys.exit(0)
 
-  except urllib2.URLError, e:
-      print e.reason
-      sys.exit(3)
+    for opt, arg in opts:
+        if opt in ("-V", "--version"):
+            print (_version)
+            found_V = True
+            sys.exit(0)
+        elif opt in ("-h", "--help"):
+            found_h = True
+            usage()
+            sys.exit(0)
+        elif opt in ("-u", "--user"):
+            _user = arg
+            found_u = True
+        elif opt in ("-p", "--password"):
+            _password = arg
+            found_p = True
+        elif opt in ("-e", "--endpoint"):
+            _endpoint = arg
+            found_e = True
+        elif opt in ("-f", "--filter"):
+            _filter = arg
+            found_f = True
+        elif opt in ("-c", "--critical"):
+            _critical = int(arg)
+            found_c = True
+        elif opt in ("-w", "--warning"):
+            _warning = int(arg)
+            found_w = True
+
+    if not found_u or not found_p or not found_e or not found_f or not found_c or not found_w:
+        usage()
+        sys.exit(3)
+
+    # Create endpoints for system and the journal with node_id
+    _endpoint_system = _endpoint + "/api/system"
+    _endpoint_node   = _endpoint + "/api/cluster/%s/journal"
+
+    # Create  basic_auth header
+    headers = urllib3.make_headers(basic_auth=_user + ":" + _password)
+
+    # 1. Ask System for the Node_ID
+    try:
+        response = urllib3.request(_method, _endpoint_system, headers=headers)
+        jsonData = response.json()
+        node_ID  = jsonData["node_id"]
+    except urllib3.exceptions.NewConnectionError as e:
+        print (e.reason)
+        print (e)
+        sys.exit(3)
+
+    # add Node_ID to Node Endpoint
+    _endpoint_node = (_endpoint_node % node_ID)
+    # 2. Call Node for Journal Data
+    try: 
+        response = urllib3.request(_method, _endpoint_node, headers=headers)
+        jsonData = response.json()
+
+        value = int(str(jsonpath.jsonpath(jsonData, _filter))[1:-1])
+        if (_warning >= _critical):
+            print ('Critical threshold must not be lower or equal to the warning threshold!')
+            sys.exit(3)
+        elif (value >= _critical):
+            print ("GRAYLOG CRITICAL - value: %s | %s=%s" % (value, _filter, value))
+            sys.exit(2)
+        elif (value >= _warning):
+            print ("GRAYLOG WARNING - value: %s | %s=%s" % (value, _filter, value))
+            sys.exit(1)
+        else:
+            print ("GRAYLOG OK - value: %s | %s=%s" % (value, _filter, value))
+            sys.exit(0)
+
+    except urllib3.exceptions.NewConnectionError as e:
+        print (e)
+        sys.exit(3)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
